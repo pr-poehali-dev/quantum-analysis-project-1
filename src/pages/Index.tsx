@@ -18,13 +18,41 @@ import {
   Lock,
   Percent,
   Megaphone,
+  Plus,
+  GraduationCap,
+  Sparkles,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Icon from "@/components/ui/icon";
+
+const SUBJECTS = [
+  "Математика", "Алгебра", "Геометрия", "Физика", "Химия",
+  "Биология", "История", "Обществознание", "География", "Русский язык",
+  "Литература", "Английский язык", "Немецкий язык", "Французский язык",
+  "Информатика", "ОБЖ", "Физкультура", "Музыка", "ИЗО",
+  "Технология", "Экономика", "Право", "Астрономия",
+];
+
+const CLASSES = Array.from({ length: 11 }, (_, i) => `${i + 1} класс`);
+
+const RECOMMENDATIONS = [
+  { type: "service", icon: "📝", title: "Решу домашку по математике", price: "от 100 ₽", rating: 4.9, reviews: 128, badge: "Топ" },
+  { type: "tutor", icon: "👩‍🏫", title: "Репетитор по физике", price: "от 300 ₽/час", rating: 5.0, reviews: 45, badge: "Репетитор" },
+  { type: "service", icon: "📖", title: "Помогу с сочинением по литературе", price: "от 150 ₽", rating: 4.8, reviews: 67, badge: null },
+  { type: "tutor", icon: "🧑‍💻", title: "Репетитор по информатике и Python", price: "от 400 ₽/час", rating: 4.9, reviews: 33, badge: "Репетитор" },
+  { type: "service", icon: "🧪", title: "Лабораторная по химии под ключ", price: "от 200 ₽", rating: 4.7, reviews: 22, badge: null },
+  { type: "tutor", icon: "👨‍🏫", title: "Репетитор по русскому языку и ЕГЭ", price: "от 350 ₽/час", rating: 5.0, reviews: 89, badge: "Топ" },
+];
+
+type Tab = "feed" | "recommendations";
 
 const Index = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>("feed");
+  const [subjectsOpen, setSubjectsOpen] = useState(true);
+  const [classesOpen, setClassesOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#36393f] text-white overflow-x-hidden">
@@ -40,7 +68,13 @@ const Index = () => {
               <p className="text-xs text-[#b9bbbe] hidden sm:block">Анонимный маркетплейс для школьников</p>
             </div>
           </div>
-          <div className="hidden sm:flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-3">
+            <Button
+              className="bg-[#3ba55c] hover:bg-[#2d8049] text-white px-5 py-2 rounded text-sm font-medium flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Разместить объявление
+            </Button>
             <Button variant="ghost" className="text-[#b9bbbe] hover:text-white hover:bg-[#40444b]">
               Войти
             </Button>
@@ -60,10 +94,14 @@ const Index = () => {
         {mobileMenuOpen && (
           <div className="sm:hidden mt-4 pt-4 border-t border-[#202225]">
             <div className="flex flex-col gap-3">
+              <Button className="bg-[#3ba55c] hover:bg-[#2d8049] text-white rounded justify-start">
+                <Plus className="w-4 h-4 mr-2" />
+                Разместить объявление
+              </Button>
               <Button variant="ghost" className="text-[#b9bbbe] hover:text-white hover:bg-[#40444b] justify-start">
                 Войти
               </Button>
-              <Button className="bg-[#5865f2] hover:bg-[#4752c4] text-white px-6 py-2 rounded text-sm font-medium">
+              <Button className="bg-[#5865f2] hover:bg-[#4752c4] text-white rounded">
                 Начать
               </Button>
             </div>
@@ -79,7 +117,7 @@ const Index = () => {
             <BookOpen className="w-6 h-6 text-white" />
           </div>
           <div className="w-8 h-[2px] bg-[#36393f] rounded-full"></div>
-          {["М", "А", "Ф", "Г"].map((letter, i) => (
+          {["М", "Ф", "А", "Г", "Х", "Б"].map((letter, i) => (
             <div
               key={i}
               className="w-12 h-12 bg-[#36393f] rounded-3xl hover:rounded-xl transition-all duration-200 flex items-center justify-center cursor-pointer hover:bg-[#5865f2]"
@@ -92,9 +130,7 @@ const Index = () => {
         {/* Основной контент */}
         <div className="flex-1 flex flex-col lg:flex-row">
           {/* Боковая панель каналов */}
-          <div
-            className={`${mobileSidebarOpen ? "block" : "hidden"} lg:block w-full lg:w-60 bg-[#2f3136] flex flex-col`}
-          >
+          <div className={`${mobileSidebarOpen ? "block" : "hidden"} lg:block w-full lg:w-64 bg-[#2f3136] flex flex-col`}>
             <div className="p-4 border-b border-[#202225] flex items-center justify-between">
               <h2 className="text-white font-semibold text-base">ДомашкаМаркет</h2>
               <Button
@@ -105,42 +141,67 @@ const Index = () => {
                 <X className="w-4 h-4" />
               </Button>
             </div>
-            <div className="flex-1 p-2">
-              <div className="mb-4">
-                <div className="flex items-center gap-1 px-2 py-1 text-[#8e9297] text-xs font-semibold uppercase tracking-wide">
-                  <ArrowRight className="w-3 h-3" />
+
+            <div className="flex-1 p-2 overflow-y-auto">
+
+              {/* Кнопка разместить объявление */}
+              <div className="mb-3">
+                <Button className="w-full bg-[#3ba55c] hover:bg-[#2d8049] text-white text-sm rounded flex items-center gap-2 justify-center py-2">
+                  <Plus className="w-4 h-4" />
+                  Разместить объявление
+                </Button>
+              </div>
+
+              {/* Предметы */}
+              <div className="mb-2">
+                <button
+                  className="flex items-center gap-1 w-full px-2 py-1 text-[#8e9297] text-xs font-semibold uppercase tracking-wide hover:text-[#dcddde]"
+                  onClick={() => setSubjectsOpen(!subjectsOpen)}
+                >
+                  {subjectsOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                   <span>Предметы</span>
-                </div>
-                <div className="mt-1 space-y-0.5">
-                  {["математика", "физика", "история", "химия", "литература"].map((channel) => (
-                    <div
-                      key={channel}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded text-[#8e9297] hover:text-[#dcddde] hover:bg-[#393c43] cursor-pointer"
-                    >
-                      <Hash className="w-4 h-4" />
-                      <span className="text-sm">{channel}</span>
-                    </div>
-                  ))}
-                </div>
+                </button>
+                {subjectsOpen && (
+                  <div className="mt-1 space-y-0.5 max-h-52 overflow-y-auto">
+                    {SUBJECTS.map((subject) => (
+                      <div
+                        key={subject}
+                        className="flex items-center gap-1.5 px-2 py-1 rounded text-[#8e9297] hover:text-[#dcddde] hover:bg-[#393c43] cursor-pointer"
+                      >
+                        <Hash className="w-4 h-4 flex-shrink-0" />
+                        <span className="text-sm truncate">{subject.toLowerCase()}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div>
-                <div className="flex items-center gap-1 px-2 py-1 text-[#8e9297] text-xs font-semibold uppercase tracking-wide">
-                  <ArrowRight className="w-3 h-3" />
+
+              {/* Контрольные по классам */}
+              <div className="mb-2">
+                <button
+                  className="flex items-center gap-1 w-full px-2 py-1 text-[#8e9297] text-xs font-semibold uppercase tracking-wide hover:text-[#dcddde]"
+                  onClick={() => setClassesOpen(!classesOpen)}
+                >
+                  {classesOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                   <span>Контрольные</span>
-                </div>
-                <div className="mt-1 space-y-0.5">
-                  {["5 класс", "9 класс", "11 класс"].map((channel) => (
-                    <div
-                      key={channel}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded text-[#8e9297] hover:text-[#dcddde] hover:bg-[#393c43] cursor-pointer"
-                    >
-                      <Mic className="w-4 h-4" />
-                      <span className="text-sm">{channel}</span>
-                    </div>
-                  ))}
-                </div>
+                </button>
+                {classesOpen && (
+                  <div className="mt-1 space-y-0.5">
+                    {CLASSES.map((cls) => (
+                      <div
+                        key={cls}
+                        className="flex items-center gap-1.5 px-2 py-1 rounded text-[#8e9297] hover:text-[#dcddde] hover:bg-[#393c43] cursor-pointer"
+                      >
+                        <GraduationCap className="w-4 h-4 flex-shrink-0" />
+                        <span className="text-sm">{cls}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
+
             </div>
+
             {/* Аноним */}
             <div className="p-2 bg-[#292b2f] flex items-center gap-2">
               <div className="w-8 h-8 bg-[#5865f2] rounded-full flex items-center justify-center">
@@ -150,11 +211,9 @@ const Index = () => {
                 <div className="text-white text-sm font-medium truncate">Аноним</div>
                 <div className="text-[#b9bbbe] text-xs truncate">100% анонимно</div>
               </div>
-              <div className="flex gap-1">
-                <Button variant="ghost" size="sm" className="w-8 h-8 p-0 hover:bg-[#40444b]">
-                  <Settings className="w-4 h-4 text-[#b9bbbe]" />
-                </Button>
-              </div>
+              <Button variant="ghost" size="sm" className="w-8 h-8 p-0 hover:bg-[#40444b]">
+                <Settings className="w-4 h-4 text-[#b9bbbe]" />
+              </Button>
             </div>
           </div>
 
@@ -172,7 +231,7 @@ const Index = () => {
               <Hash className="w-5 h-5 text-[#8e9297]" />
               <span className="text-white font-semibold">математика</span>
               <div className="w-px h-6 bg-[#40444b] mx-2 hidden sm:block"></div>
-              <span className="text-[#8e9297] text-sm hidden sm:block">Покупай и продавай решения полностью анонимно</span>
+              <span className="text-[#8e9297] text-sm hidden sm:block">Покупай и продавай решения анонимно</span>
               <div className="ml-auto flex items-center gap-2 sm:gap-4">
                 <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-[#b9bbbe] cursor-pointer hover:text-[#dcddde]" />
                 <Users className="w-4 h-4 sm:w-5 sm:h-5 text-[#b9bbbe] cursor-pointer hover:text-[#dcddde]" />
@@ -180,116 +239,220 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Сообщения */}
-            <div className="flex-1 p-2 sm:p-4 space-y-4 sm:space-y-6 overflow-y-auto">
+            {/* Вкладки */}
+            <div className="bg-[#2f3136] border-b border-[#202225] flex">
+              <button
+                onClick={() => setActiveTab("feed")}
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === "feed"
+                    ? "border-[#5865f2] text-white"
+                    : "border-transparent text-[#8e9297] hover:text-[#dcddde]"
+                }`}
+              >
+                <Hash className="w-4 h-4" />
+                Лента
+              </button>
+              <button
+                onClick={() => setActiveTab("recommendations")}
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === "recommendations"
+                    ? "border-[#5865f2] text-white"
+                    : "border-transparent text-[#8e9297] hover:text-[#dcddde]"
+                }`}
+              >
+                <Sparkles className="w-4 h-4" />
+                Рекомендации
+              </button>
+            </div>
 
-              {/* Приветственное сообщение бота */}
-              <div className="flex gap-2 sm:gap-4">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#5865f2] rounded-full flex items-center justify-center flex-shrink-0">
-                  <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-white font-medium text-sm sm:text-base">ДомашкаБот</span>
-                    <span className="bg-[#5865f2] text-white text-xs px-1.5 py-0.5 rounded font-medium">БОТ</span>
-                    <span className="text-[#72767d] text-xs hidden sm:inline">Сегодня в 09:00</span>
+            {/* Контент вкладок */}
+            <div className="flex-1 p-2 sm:p-4 overflow-y-auto">
+
+              {/* === ЛЕНТА === */}
+              {activeTab === "feed" && (
+                <div className="space-y-4 sm:space-y-6">
+
+                  {/* Приветственное сообщение бота */}
+                  <div className="flex gap-2 sm:gap-4">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#5865f2] rounded-full flex items-center justify-center flex-shrink-0">
+                      <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <span className="text-white font-medium text-sm sm:text-base">ДомашкаБот</span>
+                        <span className="bg-[#5865f2] text-white text-xs px-1.5 py-0.5 rounded font-medium">БОТ</span>
+                        <span className="text-[#72767d] text-xs hidden sm:inline">Сегодня в 09:00</span>
+                      </div>
+                      <div className="text-[#dcddde] text-sm sm:text-base">
+                        <p className="mb-3">
+                          <strong>Добро пожаловать в ДомашкаМаркет!</strong> Анонимная биржа готовых решений для школьников.
+                        </p>
+                        <div className="bg-[#2f3136] border-l-4 border-[#5865f2] p-3 sm:p-4 rounded">
+                          <h3 className="text-white font-semibold mb-2 text-sm sm:text-base">Как это работает:</h3>
+                          <ul className="space-y-1 text-xs sm:text-sm text-[#b9bbbe]">
+                            <li>📚 Выбери свою школу и класс</li>
+                            <li>🛒 Найди нужный предмет и купи готовое решение</li>
+                            <li>💰 Продавай свои решения — устанавливай любую цену</li>
+                            <li>🔒 Полная анонимность — никто не узнает</li>
+                            <li>⚡ Комиссия платформы — всего 5% с продажи</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-[#dcddde] text-sm sm:text-base">
-                    <p className="mb-3 sm:mb-4">
-                      <strong>Добро пожаловать в ДомашкаМаркет!</strong> Анонимная биржа готовых решений для школьников.
-                    </p>
-                    <div className="bg-[#2f3136] border-l-4 border-[#5865f2] p-3 sm:p-4 rounded">
-                      <h3 className="text-white font-semibold mb-2 text-sm sm:text-base">Как это работает:</h3>
-                      <ul className="space-y-1 text-xs sm:text-sm text-[#b9bbbe]">
-                        <li>📚 Выбери свою школу и класс</li>
-                        <li>🛒 Найди нужный предмет и купи готовое решение</li>
-                        <li>💰 Продавай свои решения сам — устанавливай любую цену</li>
-                        <li>🔒 Полная анонимность — никто не узнает</li>
-                        <li>⚡ Комиссия платформы — всего 5% с продажи</li>
-                      </ul>
+
+                  {/* Пример объявления */}
+                  <div className="flex gap-2 sm:gap-4">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-xs sm:text-sm font-medium">А</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <span className="text-white font-medium text-sm sm:text-base">Аноним#7731</span>
+                        <span className="text-[#72767d] text-xs hidden sm:inline">Сегодня в 10:22</span>
+                      </div>
+                      <div className="text-[#dcddde] mb-3 text-sm sm:text-base">
+                        Сделаю домашку по математике за 100 рублей, быстро и правильно 🔥
+                      </div>
+                      <div className="bg-[#2f3136] border border-[#202225] rounded-lg overflow-hidden w-full max-w-sm">
+                        <div className="h-2 bg-gradient-to-r from-[#5865f2] to-[#7c3aed]"></div>
+                        <div className="p-3 sm:p-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#5865f2] to-[#7c3aed] rounded-lg flex items-center justify-center flex-shrink-0">
+                              <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                            </div>
+                            <div>
+                              <div className="text-white font-semibold text-xs sm:text-sm">Домашка по математике</div>
+                              <div className="text-[#dcddde] text-xs sm:text-sm">9 класс · Алгебра</div>
+                              <div className="text-[#b9bbbe] text-xs">ГОУ СОШ №45, Москва</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1">
+                              <Star className="w-4 h-4 text-[#faa61a] fill-[#faa61a]" />
+                              <span className="text-[#faa61a] text-xs font-medium">4.9 (32 отзыва)</span>
+                            </div>
+                            <div className="text-[#3ba55c] font-bold text-base sm:text-lg">100 ₽</div>
+                          </div>
+                          <Button className="w-full mt-3 bg-[#5865f2] hover:bg-[#4752c4] text-white text-xs sm:text-sm rounded">
+                            <ShoppingCart className="w-4 h-4 mr-2" />
+                            Купить решение
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Второй пример */}
+                  <div className="flex gap-2 sm:gap-4">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-green-500 to-teal-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-xs sm:text-sm font-medium">К</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <span className="text-white font-medium text-sm sm:text-base">Аноним#2290</span>
+                        <span className="text-[#72767d] text-xs hidden sm:inline">Сегодня в 10:35</span>
+                      </div>
+                      <div className="text-[#dcddde] text-sm sm:text-base">
+                        Купил, всё верно — пять! Спасибо 🙏
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Рекламный блок */}
+                  <div className="flex gap-2 sm:gap-4">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#faa61a] rounded-full flex items-center justify-center flex-shrink-0">
+                      <Megaphone className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <span className="text-white font-medium text-sm sm:text-base">РекламаБот</span>
+                        <span className="bg-[#faa61a] text-white text-xs px-1.5 py-0.5 rounded font-medium">РЕКЛАМА</span>
+                        <span className="text-[#72767d] text-xs hidden sm:inline">Сегодня в 11:00</span>
+                      </div>
+                      <div className="bg-[#2f3136] border border-[#faa61a]/30 rounded-lg p-3 sm:p-4 max-w-sm">
+                        <div className="text-[#faa61a] text-xs font-semibold uppercase tracking-wide mb-1">Спонсорское место</div>
+                        <div className="text-white font-semibold text-sm mb-1">Разместить рекламу — 79 ₽</div>
+                        <div className="text-[#b9bbbe] text-xs">Цена растёт вместе с аудиторией. Успей разместиться дёшево!</div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* Пример объявления продавца */}
-              <div className="flex gap-2 sm:gap-4">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-xs sm:text-sm font-medium">А</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-white font-medium text-sm sm:text-base">Аноним#7731</span>
-                    <span className="text-[#72767d] text-xs hidden sm:inline">Сегодня в 10:22</span>
-                  </div>
-                  <div className="text-[#dcddde] mb-3 text-sm sm:text-base">
-                    Сделаю домашку по математике за 100 рублей, быстро и правильно 🔥
+              {/* === РЕКОМЕНДАЦИИ === */}
+              {activeTab === "recommendations" && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Sparkles className="w-5 h-5 text-[#faa61a]" />
+                    <h2 className="text-white font-semibold text-base">Популярные услуги и репетиторы</h2>
                   </div>
 
-                  {/* Карточка предложения */}
-                  <div className="bg-[#2f3136] border border-[#202225] rounded-lg overflow-hidden w-full max-w-sm">
-                    <div className="h-2 bg-gradient-to-r from-[#5865f2] to-[#7c3aed]"></div>
-                    <div className="p-3 sm:p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#5865f2] to-[#7c3aed] rounded-lg flex items-center justify-center flex-shrink-0">
-                          <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                        </div>
-                        <div>
-                          <div className="text-white font-semibold text-xs sm:text-sm">Домашка по математике</div>
-                          <div className="text-[#dcddde] text-xs sm:text-sm">9 класс · Алгебра</div>
-                          <div className="text-[#b9bbbe] text-xs sm:text-sm">ГОУ СОШ №45, Москва</div>
+                  {/* Фильтры */}
+                  <div className="flex gap-2 flex-wrap mb-4">
+                    {["Все", "Услуги", "Репетиторы"].map((f) => (
+                      <button
+                        key={f}
+                        className="px-3 py-1 rounded-full text-xs font-medium bg-[#40444b] text-[#dcddde] hover:bg-[#5865f2] hover:text-white transition-colors"
+                      >
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {RECOMMENDATIONS.map((item, i) => (
+                      <div key={i} className="bg-[#2f3136] border border-[#202225] rounded-xl p-4 hover:border-[#5865f2]/50 transition-colors">
+                        <div className="flex items-start gap-3">
+                          <div className="w-12 h-12 bg-[#40444b] rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
+                            {item.icon}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2 mb-1">
+                              <div className="text-white font-medium text-sm leading-tight">{item.title}</div>
+                              {item.badge && (
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${
+                                  item.badge === "Репетитор"
+                                    ? "bg-[#7c3aed]/30 text-[#a78bfa]"
+                                    : "bg-[#faa61a]/20 text-[#faa61a]"
+                                }`}>
+                                  {item.badge}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 mb-3">
+                              <Star className="w-3 h-3 text-[#faa61a] fill-[#faa61a]" />
+                              <span className="text-[#faa61a] text-xs">{item.rating}</span>
+                              <span className="text-[#72767d] text-xs">({item.reviews} отзывов)</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[#3ba55c] font-bold text-sm">{item.price}</span>
+                              <Button size="sm" className="bg-[#5865f2] hover:bg-[#4752c4] text-white text-xs rounded px-3 h-7">
+                                Заказать
+                              </Button>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 text-[#faa61a] fill-[#faa61a]" />
-                          <span className="text-[#faa61a] text-xs font-medium">4.9 (32 отзыва)</span>
-                        </div>
-                        <div className="text-[#3ba55c] font-bold text-base sm:text-lg">100 ₽</div>
-                      </div>
-                      <Button className="w-full mt-3 bg-[#5865f2] hover:bg-[#4752c4] text-white text-xs sm:text-sm rounded">
-                        <ShoppingCart className="w-4 h-4 mr-2" />
-                        Купить решение
-                      </Button>
+                    ))}
+                  </div>
+
+                  {/* Стать репетитором */}
+                  <div className="mt-6 bg-gradient-to-r from-[#5865f2]/20 to-[#7c3aed]/20 border border-[#5865f2]/30 rounded-xl p-4 sm:p-6 flex flex-col sm:flex-row items-center gap-4">
+                    <div className="w-12 h-12 bg-[#5865f2]/30 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <GraduationCap className="w-6 h-6 text-[#818cf8]" />
                     </div>
+                    <div className="flex-1 text-center sm:text-left">
+                      <div className="text-white font-semibold mb-1">Хочешь стать репетитором?</div>
+                      <div className="text-[#b9bbbe] text-sm">Размести своё объявление и зарабатывай. Комиссия всего 5%.</div>
+                    </div>
+                    <Button className="bg-[#5865f2] hover:bg-[#4752c4] text-white rounded px-5 flex-shrink-0">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Разместить
+                    </Button>
                   </div>
                 </div>
-              </div>
-
-              {/* Пример ответа покупателя */}
-              <div className="flex gap-2 sm:gap-4">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-green-500 to-teal-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-xs sm:text-sm font-medium">К</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-white font-medium text-sm sm:text-base">Аноним#2290</span>
-                    <span className="text-[#72767d] text-xs hidden sm:inline">Сегодня в 10:35</span>
-                  </div>
-                  <div className="text-[#dcddde] text-sm sm:text-base">
-                    Купил, всё верно — пять! Спасибо 🙏
-                  </div>
-                </div>
-              </div>
-
-              {/* Рекламный блок */}
-              <div className="flex gap-2 sm:gap-4">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#faa61a] rounded-full flex items-center justify-center flex-shrink-0">
-                  <Megaphone className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-white font-medium text-sm sm:text-base">РекламаБот</span>
-                    <span className="bg-[#faa61a] text-white text-xs px-1.5 py-0.5 rounded font-medium">РЕКЛАМА</span>
-                    <span className="text-[#72767d] text-xs hidden sm:inline">Сегодня в 11:00</span>
-                  </div>
-                  <div className="bg-[#2f3136] border border-[#faa61a]/30 rounded-lg p-3 sm:p-4 max-w-sm">
-                    <div className="text-[#faa61a] text-xs font-semibold uppercase tracking-wide mb-1">Спонсорское место</div>
-                    <div className="text-white font-semibold text-sm mb-1">Разместить рекламу — 79 ₽</div>
-                    <div className="text-[#b9bbbe] text-xs">Цена растёт вместе с аудиторией. Успей разместиться дёшево!</div>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Поле ввода */}
@@ -325,7 +488,7 @@ const Index = () => {
             <div className="mt-6 pt-4 border-t border-[#202225]">
               <h3 className="text-[#8e9297] text-xs font-semibold uppercase tracking-wide mb-3">Популярные предметы</h3>
               <div className="flex flex-wrap gap-2">
-                {["Математика", "Физика", "История", "Химия", "Биология"].map((subj) => (
+                {["Математика", "Физика", "История", "Химия", "Биология", "Информатика"].map((subj) => (
                   <span key={subj} className="text-xs bg-[#40444b] text-[#dcddde] px-2 py-1 rounded cursor-pointer hover:bg-[#5865f2] transition-colors">
                     {subj}
                   </span>
@@ -350,36 +513,12 @@ const Index = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {[
-              {
-                icon: <Lock className="w-6 h-6 text-[#5865f2]" />,
-                title: "Полная анонимность",
-                desc: "Никаких имён, номеров телефонов или личных данных. Ты просто Аноним#XXXX.",
-              },
-              {
-                icon: <BookOpen className="w-6 h-6 text-[#5865f2]" />,
-                title: "Выбор своей школы",
-                desc: "Решения подобраны под конкретную школу и программу — ответы будут правильными.",
-              },
-              {
-                icon: <Zap className="w-6 h-6 text-[#5865f2]" />,
-                title: "Свои цены",
-                desc: "Продавец сам устанавливает цену. Платформа берёт только 5% комиссии с каждой сделки.",
-              },
-              {
-                icon: <Shield className="w-6 h-6 text-[#5865f2]" />,
-                title: "Безопасные сделки",
-                desc: "Деньги хранятся на платформе до подтверждения получения. Никаких мошенников.",
-              },
-              {
-                icon: <Eye className="w-6 h-6 text-[#5865f2]" />,
-                title: "Любые запросы",
-                desc: "Домашние задания, контрольные, рефераты, ЕГЭ — любые учебные задачи.",
-              },
-              {
-                icon: <Percent className="w-6 h-6 text-[#5865f2]" />,
-                title: "Честная комиссия 5%",
-                desc: "Минимальная комиссия — 5% только с продавца. Покупатель платит ровно столько, сколько указано.",
-              },
+              { icon: <Lock className="w-6 h-6 text-[#5865f2]" />, title: "Полная анонимность", desc: "Никаких имён, номеров телефонов или личных данных. Ты просто Аноним#XXXX." },
+              { icon: <BookOpen className="w-6 h-6 text-[#5865f2]" />, title: "Выбор своей школы", desc: "Решения подобраны под конкретную школу и программу — ответы будут правильными." },
+              { icon: <Zap className="w-6 h-6 text-[#5865f2]" />, title: "Свои цены", desc: "Продавец сам устанавливает цену. Платформа берёт только 5% комиссии с каждой сделки." },
+              { icon: <Shield className="w-6 h-6 text-[#5865f2]" />, title: "Безопасные сделки", desc: "Деньги хранятся на платформе до подтверждения получения. Никаких мошенников." },
+              { icon: <Eye className="w-6 h-6 text-[#5865f2]" />, title: "Любые запросы", desc: "Домашние задания, контрольные, рефераты, ЕГЭ — любые учебные задачи." },
+              { icon: <Percent className="w-6 h-6 text-[#5865f2]" />, title: "Честная комиссия 5%", desc: "Минимальная комиссия — 5% только с продавца. Покупатель платит ровно столько, сколько указано." },
             ].map((feature, i) => (
               <div key={i} className="bg-[#36393f] rounded-xl p-4 sm:p-6 hover:bg-[#393c43] transition-colors">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#5865f2]/20 rounded-xl flex items-center justify-center mb-3 sm:mb-4">
@@ -399,9 +538,7 @@ const Index = () => {
           <div className="w-14 h-14 bg-[#faa61a]/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <Megaphone className="w-7 h-7 text-[#faa61a]" />
           </div>
-          <h2 className="text-2xl sm:text-4xl font-bold text-white mb-4">
-            Реклама и спонсорство
-          </h2>
+          <h2 className="text-2xl sm:text-4xl font-bold text-white mb-4">Реклама и спонсорство</h2>
           <p className="text-[#b9bbbe] text-base sm:text-lg mb-8 max-w-xl mx-auto">
             Сейчас разместить рекламу можно всего за <span className="text-[#faa61a] font-bold">79 ₽</span>. Цена растёт по мере роста аудитории — успей зайти первым!
           </p>
@@ -431,18 +568,11 @@ const Index = () => {
             Зарегистрируйся анонимно — никаких личных данных. Тысячи школьников уже на платформе.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              size="lg"
-              className="bg-white text-[#5865f2] hover:bg-gray-100 font-bold px-8 py-3 rounded-lg text-base"
-            >
+            <Button size="lg" className="bg-white text-[#5865f2] hover:bg-gray-100 font-bold px-8 py-3 rounded-lg text-base">
               <ShoppingCart className="w-5 h-5 mr-2" />
               Купить решение
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-white text-white hover:bg-white/10 font-bold px-8 py-3 rounded-lg text-base"
-            >
+            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 font-bold px-8 py-3 rounded-lg text-base">
               <Zap className="w-5 h-5 mr-2" />
               Стать продавцом
             </Button>
@@ -462,9 +592,7 @@ const Index = () => {
           <div className="text-[#8e9297] text-sm text-center">
             Комиссия платформы — 5% · Реклама от 79 ₽ · Полная анонимность
           </div>
-          <div className="text-[#8e9297] text-xs">
-            © 2024 ДомашкаМаркет
-          </div>
+          <div className="text-[#8e9297] text-xs">© 2024 ДомашкаМаркет</div>
         </div>
       </div>
     </div>
